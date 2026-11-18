@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>CIVIL AI - Civil Engineering Study Assistant</title>
+<style>
+:root{--bg:#f4f6fa;--panel:#fff;--ink:#1c2433;--muted:#667085;--line:#e4e8ef;--brand:#d97706;--brand-d:#b45309;--navy:#0f2a4a;--user:#0f2a4a;--ai:#fff;--ub:#eceff5}
+@media(prefers-color-scheme:dark){:root{--bg:#0d1420;--panel:#141d2d;--ink:#e8edf5;--muted:#93a0b5;--line:#243049;--ai:#1a2438;--user:#b45309;--ub:#26324a}}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;overflow:hidden}
+body{height:100vh;height:100dvh}
+#ov{display:none}
+body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans Devanagari",sans-serif;font-size:15px;background:var(--bg);color:var(--ink);display:flex}
+button,select,textarea,input{font:inherit;color:inherit}
+button{cursor:pointer}
+/* sidebar */
+#side{width:290px;background:linear-gradient(180deg,#14385f 0%,#0b1f38 100%);color:#fff;display:flex;flex-direction:column;padding:14px;gap:10px;transition:transform .25s;z-index:20;box-shadow:2px 0 16px #0002}
+.logo{display:flex;align-items:center;gap:10px;font-weight:700;font-size:18px;letter-spacing:.02em;padding:4px 4px 8px}
+.logo i{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,#f59e0b,#d97706);display:grid;place-items:center;font-style:normal;box-shadow:0 4px 12px #d9770655}
+#side button.new{background:linear-gradient(135deg,#f59e0b,#d97706);border:0;color:#fff;padding:10px;border-radius:10px;font-weight:600;box-shadow:0 4px 12px #d9770644;transition:transform .15s,box-shadow .15s}
+#side button.new:hover{transform:translateY(-1px);box-shadow:0 6px 16px #d9770666}
+#side h4{margin:10px 4px 2px;font-size:11px;letter-spacing:.08em;text-transform:uppercase;opacity:.6}
+.modes{display:grid;gap:4px}
+.modes button{background:transparent;border:0;color:#fff;text-align:left;padding:8px 10px;border-radius:8px;opacity:.85;transition:background .15s}
+.modes button:hover{background:#ffffff14}
+.modes button.on{background:#ffffff24;opacity:1;box-shadow:inset 3px 0 0 #f59e0b}
+#hist{flex:1;overflow:auto;display:grid;gap:2px;align-content:start}
+.h{display:flex;align-items:center;gap:6px;padding:8px 10px;border-radius:8px;cursor:pointer;font-size:14px}
+.h:hover,.h.on{background:#ffffff1c}
+.h span{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.h b{opacity:.5;font-weight:400;padding:0 4px}.h b:hover{opacity:1}
+#user{font-size:13px;border-top:1px solid #ffffff22;padding-top:10px;display:flex;gap:8px;align-items:center;justify-content:space-between}
+#user button{background:#ffffff22;border:0;color:#fff;padding:6px 10px;border-radius:8px}
+/* main */
+main{flex:1;display:flex;flex-direction:column;min-width:0;height:100%;background:var(--panel)}
+header{display:flex;align-items:center;gap:10px;padding:8px 14px;background:var(--panel)}
+header .menu{display:none;background:none;border:0;font-size:22px}
+header h1{font-size:14px;font-weight:600;margin:0;flex:1}
+header select{background:var(--bg);border:0;border-radius:8px;padding:5px 8px;font-size:13px}
+#chat{flex:1;overflow:auto;padding:18px 16px;display:flex;flex-direction:column;gap:14px;scroll-behavior:smooth}
+.wrap{max-width:740px;width:100%;margin:0 auto;display:flex;flex-direction:column;gap:14px}
+.msg{line-height:1.65;overflow-wrap:anywhere;animation:pop .2s ease-out}
+@keyframes pop{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+.msg.user{align-self:flex-end;max-width:80%;background:var(--ub);color:var(--ink);padding:9px 14px;border-radius:18px}
+.msg.user .chip{background:#0000000d;color:var(--ink)}
+.msg.ai{align-self:flex-start;max-width:100%;background:none;border:0;padding:2px 0}
+.msg h2,.msg h3,.msg h4{margin:.8em 0 .3em}.msg h2{font-size:1.15em}.msg h3{font-size:1.05em}
+.msg p{margin:.4em 0}.msg ul,.msg ol{margin:.3em 0;padding-left:1.4em}
+.msg code{background:#8882;padding:1px 5px;border-radius:5px}
+.msg pre{background:#0b1220;color:#e6edf7;padding:10px;border-radius:8px;overflow:auto}
+.msg table{border-collapse:collapse;display:block;overflow:auto}.msg td,.msg th{border:1px solid var(--line);padding:5px 9px}
+.msg img.gen{max-width:100%;border-radius:10px;margin-top:6px;background:#fff}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px}
+.chip{font-size:12px;background:#ffffff26;border-radius:99px;padding:2px 9px}
+.tools{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+.tools button{font-size:12px;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:4px 9px}
+.typing{display:inline-flex;gap:4px}.typing i{width:7px;height:7px;border-radius:50%;background:var(--muted);animation:b 1s infinite}
+.typing i:nth-child(2){animation-delay:.15s}.typing i:nth-child(3){animation-delay:.3s}
+@keyframes b{0%,60%,100%{transform:translateY(0);opacity:.5}30%{transform:translateY(-5px);opacity:1}}
+/* welcome */
+#welcome{text-align:center;margin:6vh auto 0;max-width:640px}
+#welcome h2{font-size:30px;margin:.2em 0;letter-spacing:.03em;background:linear-gradient(90deg,#d97706,#1a4577);-webkit-background-clip:text;background-clip:text;color:transparent}
+#welcome p{color:var(--muted)}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-top:20px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;text-align:left;font-size:14px;transition:transform .18s,box-shadow .18s,border-color .18s}
+.card:hover{border-color:var(--brand);transform:translateY(-3px);box-shadow:0 8px 20px #0000001a}
+.card b{display:block;margin-bottom:3px}
+/* composer */
+#composer{padding:6px 14px calc(14px + env(safe-area-inset-bottom));background:var(--panel)}
+#files{display:flex;gap:6px;flex-wrap:wrap;max-width:740px;margin:0 auto 6px}
+#files .chip{background:var(--bg);color:var(--ink);border:1px solid var(--line)}
+#files .chip b{cursor:pointer;margin-left:6px}
+.row{max-width:740px;margin:0 auto;display:flex;gap:4px;align-items:flex-end;background:var(--bg);border:1px solid var(--line);border-radius:26px;padding:6px 8px}
+.row textarea{flex:1;resize:none;max-height:150px;border:0;background:transparent;padding:8px 6px;outline:none;line-height:1.4}
+.ib{width:36px;height:36px;border-radius:50%;border:0;background:transparent;font-size:17px;flex:none}
+.ib:hover{background:#8881}
+.ib.on{background:#dc2626;color:#fff;border-color:#dc2626}
+.send{background:var(--brand);color:#fff;border:0}
+.send:hover{background:var(--brand-d)}
+.send:disabled{opacity:.5}
+.note{text-align:center;font-size:11px;color:var(--muted);margin-top:6px}
+/* auth */
+#auth{position:fixed;inset:0;background:#0009;display:none;place-items:center;z-index:50;padding:16px}
+#auth .box{background:var(--panel);border-radius:16px;padding:22px;width:100%;max-width:360px;display:grid;gap:10px}
+#auth input{padding:10px;border:1px solid var(--line);background:var(--bg);border-radius:10px}
+#auth button{padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--bg)}
+#auth button.p{background:var(--brand);color:#fff;border:0}
+#auth small{color:#dc2626}
+@media(max-width:760px){
+ #side{position:fixed;inset:0 auto 0 0;height:100vh;height:100dvh;transform:translateX(-100%);width:84%;max-width:320px;z-index:30}
+ #side.open{transform:none}
+ #side.open+#ov{display:block;position:fixed;inset:0;background:#0007;z-index:25}
+ header{padding:8px 12px}
+ header .menu{display:block;font-size:24px;padding:2px 8px}
+ header h1{font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+ header select{font-size:14px;padding:5px 6px}
+ #chat{padding:12px 10px}
+ .msg.user{max-width:88%}
+ #welcome{margin-top:2vh}
+ #welcome h2{font-size:26px}
+ .cards{grid-template-columns:1fr 1fr;gap:8px}
+ .card{padding:10px;font-size:13px}
+ #composer{padding:8px 10px calc(8px + env(safe-area-inset-bottom))}
+ .row{gap:6px}
+ .ib{width:34px;height:34px}
+ .row textarea,#auth input{font-size:16px}
+ .tools button{padding:6px 10px}
+ .note{font-size:10px;line-height:1.3}
+}
+@media print{body *{visibility:hidden}}
+</style>
+</head>
+<body>
+<aside id="side">
+  <div class="logo"><i>🏗️</i> CIVIL AI</div>
+  <button class="new" onclick="newChat()" data-t="newChat">+ New Chat</button>
+  <h4 data-t="tools">Tools</h4>
+  <div class="modes" id="modes"></div>
+  <h4 data-t="history">Chat History</h4>
+  <div id="hist"></div>
+  <div id="user"><span id="uname">Guest</span><button id="authBtn" onclick="openAuth()">Login</button></div>
+</aside>
+<div id="ov" onclick="toggleSide()"></div>
+
+<main>
+  <header>
+    <button class="menu" onclick="toggleSide()">☰</button>
+    <h1 id="title">Civil Engineering Study Assistant</h1>
+    <select id="lang" title="Answer language">
+      <option>English</option><option>Hindi</option><option>Hinglish</option>
+    </select>
+  </header>
+
+  <section id="chat"><div class="wrap" id="wrap"></div></section>
+
+  <div id="composer">
+    <div id="files"></div>
+    <div class="row">
+      <input type="file" id="file" accept="image/png,image/jpeg,image/webp,application/pdf" multiple hidden>
+      <button class="ib" title="Photo / PDF upload" onclick="file.click()">📎</button>
+      <button class="ib" id="mic" title="Voice input" onclick="toggleMic()">🎤</button>
+      <textarea id="input" rows="1" placeholder="Civil Engineering ka sawaal poochhiye..."></textarea>
+      <button class="ib send" id="sendBtn" onclick="send()">➤</button>
+    </div>
+  </div>
+</main>
+
+<div id="auth"><div class="box">
+  <h3 style="margin:0" data-t="authTitle">Login / Signup</h3>
+  <input id="em" type="email" placeholder="Email" data-p="email">
+  <input id="pw" type="password" placeholder="Password (min 6)" data-p="pw">
+  <button class="p" onclick="emailAuth(false)" data-t="login">Login</button>
+  <button onclick="emailAuth(true)" data-t="signup">Create account</button>
+  <button onclick="googleAuth()" data-t="google">Continue with Google</button>
+  <small id="aerr"></small>
+  <button onclick="closeAuth()" data-t="cancel">Cancel</button>
+</div></div>
+
+<script src="firebase-config.js"></script>
+<script>
+const $=id=>document.getElementById(id);
+const MODES={chat:{icon:"💬"},assignment:{icon:"📝"},notes:{icon:"📒"},pyq:{icon:"🎯"},project:{icon:"🧱"},explain:{icon:"💡"},image:{icon:"🖼️"}};
+const TX={
+English:{
+ tagline:"Your Civil Engineering study assistant - only for Civil Engineering.",photoT:"Photo / PDF Solver",photoD:"Upload a photo or PDF of a question",voiceT:"Voice Assistant",voiceD:"Ask by speaking",
+ newChat:"+ New Chat",tools:"Tools",history:"Chat History",noChat:"No chats yet",guest:"Guest",login:"Login",logout:"Logout",
+ listen:"🔊 Listen",pdf:"📄 Download PDF",copy:"📋 Copy",dlImg:"⬇ Download image",defaultFile:"Please solve/explain the attached file.",
+ authTitle:"Login / Signup",email:"Email",pw:"Password (min 6)",signup:"Create account",google:"Continue with Google",cancel:"Cancel",
+ modes:{
+  chat:["AI Chatbot","Ask a Civil Engineering question...","Ask anything about civil topics"],
+  assignment:["Assignment Solver","Paste your assignment question or upload a photo/PDF...","Step-by-step solution"],
+  notes:["Notes Generator","Type a topic, e.g. Types of foundations","Exam-ready notes"],
+  pyq:["PYQ & Exam Prep","Type a subject/topic, e.g. Soil Mechanics PYQs","Important questions"],
+  project:["Project Assistant","What kind of project? (e.g. low-cost housing)","Project ideas & guidance"],
+  explain:["Smart Explanation","Which concept do you want to understand?","Simple English + Hindi"],
+  image:["Diagram Generator","Describe a diagram, e.g. cantilever retaining wall with drainage","Create civil diagrams"]}},
+Hindi:{
+ tagline:"आपका सिविल इंजीनियरिंग स्टडी असिस्टेंट - सिर्फ़ सिविल इंजीनियरिंग के लिए।",photoT:"फोटो / PDF सॉल्वर",photoD:"सवाल की फोटो या PDF अपलोड करें",voiceT:"वॉइस असिस्टेंट",voiceD:"बोलकर सवाल पूछें",
+ newChat:"+ नई चैट",tools:"टूल्स",history:"चैट हिस्ट्री",noChat:"अभी कोई चैट नहीं",guest:"अतिथि",login:"लॉगिन",logout:"लॉगआउट",
+ listen:"🔊 सुनें",pdf:"📄 PDF डाउनलोड",copy:"📋 कॉपी",dlImg:"⬇ इमेज डाउनलोड",defaultFile:"इस अटैच की गई फाइल का हल/व्याख्या दें।",
+ authTitle:"लॉगिन / साइनअप",email:"ईमेल",pw:"पासवर्ड (कम से कम 6)",signup:"अकाउंट बनाएं",google:"Google से जारी रखें",cancel:"रद्द करें",
+ modes:{
+  chat:["AI चैटबॉट","सिविल इंजीनियरिंग का सवाल पूछिए...","सिविल विषयों पर कुछ भी पूछें"],
+  assignment:["असाइनमेंट सॉल्वर","असाइनमेंट का सवाल लिखें या फोटो/PDF अपलोड करें...","स्टेप-बाय-स्टेप हल"],
+  notes:["नोट्स जनरेटर","टॉपिक लिखें, जैसे: Types of foundations","परीक्षा के लिए नोट्स"],
+  pyq:["PYQ और परीक्षा तैयारी","विषय/टॉपिक लिखें, जैसे: Soil Mechanics PYQs","महत्वपूर्ण प्रश्न"],
+  project:["प्रोजेक्ट असिस्टेंट","कैसा प्रोजेक्ट चाहिए? (जैसे: low-cost housing)","प्रोजेक्ट आइडिया और गाइडेंस"],
+  explain:["स्मार्ट एक्सप्लेनेशन","कौन सा कॉन्सेप्ट समझना है?","आसान अंग्रेज़ी + हिंदी"],
+  image:["डायग्राम जनरेटर","डायग्राम बताइए, जैसे: cantilever retaining wall with drainage","सिविल डायग्राम बनाएं"]}},
+Hinglish:{
+ tagline:"Aapka Civil Engineering Study Assistant - sirf Civil Engineering ke liye.",photoT:"Photo / PDF Solver",photoD:"Question ki photo ya PDF upload karein",voiceT:"Voice Assistant",voiceD:"Bolkar sawaal poochhein",
+ newChat:"+ Nayi Chat",tools:"Tools",history:"Chat History",noChat:"Abhi koi chat nahi",guest:"Guest",login:"Login",logout:"Logout",
+ listen:"🔊 Suno",pdf:"📄 PDF Download",copy:"📋 Copy",dlImg:"⬇ Image Download",defaultFile:"Is attached file ka solution/explanation dein.",
+ authTitle:"Login / Signup",email:"Email",pw:"Password (min 6)",signup:"Account banayein",google:"Google se continue karein",cancel:"Cancel",
+ modes:{
+  chat:["AI Chatbot","Civil Engineering ka sawaal poochhiye...","Kisi bhi civil topic par sawaal poochho"],
+  assignment:["Assignment Solver","Assignment question paste karein ya photo/PDF upload karein...","Step-by-step solution"],
+  notes:["Notes Generator","Topic likhein, jaise: Types of foundations","Exam-ready notes"],
+  pyq:["PYQ & Exam Prep","Subject/topic likhein, jaise: Soil Mechanics PYQs","Important questions"],
+  project:["Project Assistant","Kaisa project chahiye? (jaise: low-cost housing)","Project ideas & guidance"],
+  explain:["Smart Explanation","Konsa concept samajhna hai?","Simple English + Hindi"],
+  image:["Diagram Generator","Diagram describe karein, jaise: cantilever retaining wall with drainage","Civil diagrams banao"]}}
+};
+let mode="chat", chats=JSON.parse(localStorage.getItem("civilai_chats")||"[]"), cur=null, pending=[], busy=false, user=null;
+
+/* ---------- storage ---------- */
+function save(){
+  try{localStorage.setItem("civilai_chats",JSON.stringify(chats.map(c=>({...c,messages:c.messages.map(m=>({...m,image:undefined}))}))))}catch(e){}
+  if(user&&db){db.collection("users").doc(user.uid).set({chats:JSON.stringify(chats.slice(0,30).map(c=>({...c,messages:c.messages.map(m=>({role:m.role,content:m.content}))})))}).catch(()=>{})}
+}
+function curChat(){return chats.find(c=>c.id===cur)}
+function newChat(){cur=null;renderChat();renderHist();$("side").classList.remove("open")}
+function openChat(id){cur=id;renderChat();renderHist();$("side").classList.remove("open")}
+function delChat(id,e){e.stopPropagation();chats=chats.filter(c=>c.id!==id);if(cur===id)cur=null;save();renderChat();renderHist()}
+function toggleSide(){$("side").classList.toggle("open")}
+
+/* ---------- UI ---------- */
+function tx(k){return (TX[$("lang").value]||TX.English)[k]}
+function mt(k){return tx("modes")[k]}
+function renderModes(){
+  $("modes").innerHTML=Object.keys(MODES).map(k=>`<button class="${k===mode?"on":""}" onclick="setMode('${k}')">${MODES[k].icon} ${mt(k)[0]}</button>`).join("");
+}
+function setMode(k){mode=k;renderModes();$("input").placeholder=mt(k)[1];$("title").textContent=mt(k)[0];$("side").classList.remove("open");$("input").focus()}
+function refreshUser(){$("uname").textContent=user?(user.displayName||user.email):tx("guest");$("authBtn").textContent=user?tx("logout"):tx("login")}
+function applyLang(){
+  document.querySelectorAll("[data-t]").forEach(e=>e.textContent=tx(e.dataset.t));
+  document.querySelectorAll("[data-p]").forEach(e=>e.placeholder=tx(e.dataset.p));
+  renderModes();$("input").placeholder=mt(mode)[1];$("title").textContent=mt(mode)[0];
+  refreshUser();renderHist();renderChat();
+}
+function renderHist(){
+  $("hist").innerHTML=chats.map(c=>`<div class="h ${c.id===cur?"on":""}" onclick="openChat('${c.id}')"><span>${esc(c.title)}</span><b onclick="delChat('${c.id}',event)">✕</b></div>`).join("")||`<div style="opacity:.5;font-size:13px;padding:6px 10px">${tx("noChat")}</div>`;
+}
+function welcome(){
+  return `<div id="welcome"><div style="font-size:46px">🏗️</div><h2>CIVIL AI</h2>
+  <p>${tx("tagline")}</p>
+  <div class="cards">${Object.keys(MODES).filter(k=>k!=="chat").map(k=>`<button class="card" onclick="setMode('${k}')"><b>${MODES[k].icon} ${mt(k)[0]}</b>${mt(k)[2]}</button>`).join("")}
+  <button class="card" onclick="file.click()"><b>📷 ${tx("photoT")}</b>${tx("photoD")}</button>
+  <button class="card" onclick="toggleMic()"><b>🎤 ${tx("voiceT")}</b>${tx("voiceD")}</button></div></div>`;
+}
+function renderChat(){
+  const c=curChat();const w=$("wrap");
+  if(!c||!c.messages.length){w.innerHTML=welcome();return}
+  w.innerHTML="";c.messages.forEach((m,i)=>addMsg(m,i));scrollEnd();
+}
+function addMsg(m,i){
+  const d=document.createElement("div");d.className="msg "+(m.role==="user"?"user":"ai");
+  let h="";
+  if(m.files&&m.files.length)h+=`<div class="chips">${m.files.map(f=>`<span class="chip">📎 ${esc(f)}</span>`).join("")}</div>`;
+  h+=m.role==="user"?esc(m.content).replace(/\n/g,"<br>"):md(m.content);
+  if(m.image)h+=`<img class="gen" src="data:${m.image.mimeType};base64,${m.image.data}"><div class="tools"><button onclick="dlImg(${i})">${tx("dlImg")}</button></div>`;
+  if(m.role!=="user"&&m.content)h+=`<div class="tools"><button onclick="speak(${i})">${tx("listen")}</button><button onclick="dlPdf(${i})">${tx("pdf")}</button><button onclick="copyMsg(${i})">${tx("copy")}</button></div>`;
+  d.innerHTML=h;$("wrap").appendChild(d);return d;
+}
+function scrollEnd(){const c=$("chat");c.scrollTop=c.scrollHeight}
+function esc(s){return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}
+function inline(s){return s.replace(/\*\*(.+?)\*\*/g,"<b>$1</b>").replace(/(^|[^*])\*(?!\s)(.+?)\*/g,"$1<i>$2</i>").replace(/`([^`]+)`/g,"<code>$1</code>")}
+function md(src){
+  const lines=esc(src).split("\n");let out="",list=null,code=false,tbl=[];
+  const close=()=>{if(list){out+=`</${list}>`;list=null}};
+  const flushT=()=>{if(!tbl.length)return;const rows=tbl.filter(r=>!/^\s*\|?[\s:-]+\|[\s|:-]*$/.test(r));
+    out+="<table>"+rows.map((r,i)=>"<tr>"+r.replace(/^\||\|$/g,"").split("|").map(c=>`<${i?"td":"th"}>${inline(c.trim())}</${i?"td":"th"}>`).join("")+"</tr>").join("")+"</table>";tbl=[]};
+  for(const l of lines){
+    if(l.startsWith("```")){close();flushT();out+=code?"</pre>":"<pre>";code=!code;continue}
+    if(code){out+=l+"\n";continue}
+    if(/^\s*\|.*\|\s*$/.test(l)){close();tbl.push(l);continue}else flushT();
+    let m;
+    if(m=l.match(/^(#{1,4})\s+(.*)/)){close();const n=Math.min(m[1].length+1,4);out+=`<h${n}>${inline(m[2])}</h${n}>`}
+    else if(m=l.match(/^\s*[-*•]\s+(.*)/)){if(list!=="ul"){close();out+="<ul>";list="ul"}out+=`<li>${inline(m[1])}</li>`}
+    else if(m=l.match(/^\s*\d+[.)]\s+(.*)/)){if(list!=="ol"){close();out+="<ol>";list="ol"}out+=`<li>${inline(m[1])}</li>`}
+    else if(!l.trim()){close()}
+    else{close();out+=`<p>${inline(l)}</p>`}
+  }
+  close();flushT();if(code)out+="</pre>";return out;
+}
+
+/* ---------- files ---------- */
+const file=$("file");
+file.onchange=async()=>{
+  for(const f of file.files){
+    if(f.size+pending.reduce((a,p)=>a+p.size,0)>3*1024*1024){alert("Files ka total size max 3MB ho sakta hai. Chhoti photo/PDF use karein.");continue}
+    const data=await new Promise(r=>{const fr=new FileReader();fr.onload=()=>r(fr.result.split(",")[1]);fr.readAsDataURL(f)});
+    pending.push({name:f.name,mimeType:f.type,data,size:f.size});
+  }
+  file.value="";renderFiles();
+};
+function renderFiles(){$("files").innerHTML=pending.map((p,i)=>`<span class="chip">📎 ${esc(p.name)}<b onclick="pending.splice(${i},1);renderFiles()">✕</b></span>`).join("")}
+
+/* ---------- send ---------- */
+const input=$("input");
+input.addEventListener("input",()=>{input.style.height="auto";input.style.height=Math.min(input.scrollHeight,150)+"px"});
+input.addEventListener("keydown",e=>{if(e.key==="Enter"&&!e.shiftKey&&innerWidth>760){e.preventDefault();send()}});
+
+async function send(){
+  if(busy)return;
+  const text=input.value.trim();
+  if(!text&&!pending.length)return;
+  let c=curChat();
+  if(!c){c={id:Date.now().toString(36),title:(text||pending[0].name).slice(0,40),messages:[]};chats.unshift(c);cur=c.id;$("wrap").innerHTML=""}
+  const files=pending.map(p=>p.name),atts=pending;pending=[];renderFiles();
+  const um={role:"user",content:text||tx("defaultFile"),files};
+  c.messages.push(um);addMsg(um,c.messages.length-1);
+  input.value="";input.style.height="auto";scrollEnd();renderHist();
+  busy=true;$("sendBtn").disabled=true;
+  const t=document.createElement("div");t.className="msg ai";t.innerHTML='<span class="typing"><i></i><i></i><i></i></span>';$("wrap").appendChild(t);scrollEnd();
+  try{
+    const isImg=mode==="image";
+    const r=await fetch(isImg?"/api/image":"/api/chat",{method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify(isImg?{prompt:um.content}:{messages:c.messages.map(m=>({role:m.role,content:m.content})),mode,language:$("lang").value,attachments:atts})});
+    const raw=await r.text();let d;
+    try{d=JSON.parse(raw)}catch(e){throw new Error("Server error ("+r.status+"): "+raw.slice(0,150))}
+    if(!r.ok)throw new Error(d.error||"Server error");
+    t.remove();
+    const am={role:"ai",content:d.reply,image:d.image};
+    c.messages.push(am);addMsg(am,c.messages.length-1);
+  }catch(e){
+    t.remove();
+    const am={role:"ai",content:"⚠️ Error: "+e.message};c.messages.push(am);addMsg(am,c.messages.length-1);
+  }
+  busy=false;$("sendBtn").disabled=false;save();scrollEnd();
+}
+
+/* ---------- answer tools ---------- */
+function copyMsg(i){navigator.clipboard.writeText(curChat().messages[i].content)}
+function dlImg(i){const m=curChat().messages[i].image;const a=document.createElement("a");a.href=`data:${m.mimeType};base64,${m.data}`;a.download="civil-diagram.png";a.click()}
+function dlPdf(i){
+  // Print-to-PDF: Hindi text bhi sahi aata hai. Dialog mein "Save as PDF" chunein.
+  const m=curChat().messages[i];
+  const w=window.open("","_blank");
+  if(!w){alert("Popup allow karein");return}
+  w.document.write(`<html><head><meta charset="utf-8"><title>CIVIL AI Answer</title><style>
+  body{font-family:system-ui,"Noto Sans Devanagari",sans-serif;max-width:760px;margin:30px auto;padding:0 20px;line-height:1.6;color:#111}
+  h1{border-bottom:3px solid #d97706;padding-bottom:6px;font-size:22px}
+  table{border-collapse:collapse}td,th{border:1px solid #999;padding:4px 8px}pre{background:#eee;padding:8px;overflow:auto}
+  footer{margin-top:30px;font-size:12px;color:#666;border-top:1px solid #ccc;padding-top:6px}img{max-width:100%}</style></head>
+  <body><h1>CIVIL AI — ${esc(curChat().title)}</h1>${md(m.content)}${m.image?`<img src="data:${m.image.mimeType};base64,${m.image.data}">`:""}
+  <footer>Generated by CIVIL AI · ${new Date().toLocaleString()}</footer></body></html>`);
+  w.document.close();setTimeout(()=>w.print(),400);
+}
+
+/* ---------- voice ---------- */
+let rec=null;
+const LC={English:"en-IN",Hindi:"hi-IN",Hinglish:"hi-IN"};
+function toggleMic(){
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR){alert("Is browser mein voice input support nahi hai. Chrome/Edge use karein.");return}
+  if(rec){rec.stop();return}
+  rec=new SR();rec.lang=LC[$("lang").value]||"en-IN";rec.interimResults=true;rec.continuous=false;
+  const base=input.value;$("mic").classList.add("on");
+  rec.onresult=e=>{input.value=(base+" "+[...e.results].map(r=>r[0].transcript).join("")).trim();input.dispatchEvent(new Event("input"))};
+  rec.onend=()=>{rec=null;$("mic").classList.remove("on")};
+  rec.onerror=()=>{};
+  rec.start();
+}
+function speak(i){
+  speechSynthesis.cancel();
+  const txt=curChat().messages[i].content.replace(/[#*`|_>-]/g," ");
+  const u=new SpeechSynthesisUtterance(txt.slice(0,3000));
+  u.lang=LC[$("lang").value]||"en-IN";speechSynthesis.speak(u);
+}
+
+/* ---------- Firebase (optional) ---------- */
+let db=null,fbAuth=null;
+function loadScript(src){return new Promise((res,rej)=>{const s=document.createElement("script");s.src=src;s.onload=res;s.onerror=rej;document.head.appendChild(s)})}
+async function initFirebase(){
+  if(!window.FIREBASE_CONFIG)return;
+  try{
+    const v="10.12.2";
+    await loadScript(`https://www.gstatic.com/firebasejs/${v}/firebase-app-compat.js`);
+    await loadScript(`https://www.gstatic.com/firebasejs/${v}/firebase-auth-compat.js`);
+    await loadScript(`https://www.gstatic.com/firebasejs/${v}/firebase-firestore-compat.js`);
+    firebase.initializeApp(window.FIREBASE_CONFIG);
+    fbAuth=firebase.auth();db=firebase.firestore();
+    fbAuth.onAuthStateChanged(async u=>{
+      user=u;refreshUser();
+      if(u){
+        try{const s=await db.collection("users").doc(u.uid).get();
+          if(s.exists&&s.data().chats){const remote=JSON.parse(s.data().chats);const ids=new Set(chats.map(c=>c.id));remote.forEach(c=>{if(!ids.has(c.id))chats.push(c)});renderHist()}}catch(e){}
+      }
+    });
+  }catch(e){console.warn("Firebase load failed",e)}
+}
+function openAuth(){
+  if(user){fbAuth.signOut();return}
+  if(!fbAuth){alert("Firebase abhi set nahi hai. public/firebase-config.js mein config daalein. Tab tak Guest mode chalega.");return}
+  $("auth").style.display="grid";
+}
+function closeAuth(){$("auth").style.display="none";$("aerr").textContent=""}
+async function emailAuth(signup){
+  try{const e=$("em").value,p=$("pw").value;
+    signup?await fbAuth.createUserWithEmailAndPassword(e,p):await fbAuth.signInWithEmailAndPassword(e,p);closeAuth()}
+  catch(e){$("aerr").textContent=e.message}
+}
+async function googleAuth(){
+  try{await fbAuth.signInWithPopup(new firebase.auth.GoogleAuthProvider());closeAuth()}catch(e){$("aerr").textContent=e.message}
+}
+
+$("lang").addEventListener("change",applyLang);applyLang();initFirebase();
+</script>
+</body>
+</html>
