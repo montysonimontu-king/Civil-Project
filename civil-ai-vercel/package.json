@@ -1,0 +1,7 @@
+{
+  "name": "civil-ai",
+  "version": "1.0.0",
+  "private": true,
+  "description": "AI-Based Civil Engineering Study Assistant",
+  "engines": { "node": "20.x" }
+}
